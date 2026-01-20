@@ -37,6 +37,16 @@ ui <- fluidPage(
     fluidRow(plotOutput("pop_growth")),
     fluidRow(
       column(
+        12,
+        h5("Rychlost růstu populace (vlastní číslo):"),
+        uiOutput("lambda"),
+        h5("Dominantní vlastní vektor matice"),
+        uiOutput("eigvek")
+      )
+    ),
+    hr(),
+    fluidRow(
+      column(
         3,
          numericInput("n_cohorts","Počet věkových kohort", value=2,min=1),
          sliderInput(
@@ -53,7 +63,7 @@ ui <- fluidPage(
         h5("Projekční matice"),
         matrixInput("pop_matrix", value = matrix(c(0,0.8,1.3,0),nrow=2), rows=list(names=F),cols=list(names=F),class="numeric"),
       ),
-      column(
+      column(3,
         h5("Počáteční velikost populace (pro jednotlivé kohorty)"),
         matrixInput("init_vector", value = matrix(rep(50,2),ncol=1), rows=list(names=F),cols=list(names=F),class="numeric")
       )
@@ -85,6 +95,15 @@ server <- function(input, output, session) {
         # generate bins based on input$bins from ui.R
       plot(matrix_model(input$pop_matrix,input$init_vector,1:input$generations),input$display_cohorts)
     })
+    output$lambda <- renderUI({
+      lambd <- sort(eigen(input$pop_matrix)$values,decreasing=T)[1]
+      paste("λ = ",lambd,sep="")
+      })
+    output$eigvek <- renderUI({
+      vecs <- round(eigen(input$pop_matrix)$vectors[,order(eigen(input$pop_matrix)$values,decreasing = T)],3)
+      paste("(",vecs[1,1],"; ",vecs[2,1],")",sep="")
+    })
+    
 }
 
 # Run the application 
