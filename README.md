@@ -1,3 +1,3 @@
 # Matrix population models
 
-Shiny app allowing to visualise predictions of age-structured matrix population model. 
+A  Shiny app visualising predictions of age-structured matrix population model. UI is currently in Czech language only.
