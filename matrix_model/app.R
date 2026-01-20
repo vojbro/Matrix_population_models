@@ -37,7 +37,7 @@ ui <- fluidPage(
     fluidRow(plotOutput("pop_growth")),
     fluidRow(
       column(
-        2,
+        3,
          numericInput("n_cohorts","Počet věkových kohort", value=2,min=1),
          sliderInput(
            "generations",
@@ -54,7 +54,6 @@ ui <- fluidPage(
         matrixInput("pop_matrix", value = matrix(c(0,0.8,1.3,0),nrow=2), rows=list(names=F),cols=list(names=F),class="numeric"),
       ),
       column(
-        2,
         h5("Počáteční velikost populace (pro jednotlivé kohorty)"),
         matrixInput("init_vector", value = matrix(rep(50,2),ncol=1), rows=list(names=F),cols=list(names=F),class="numeric")
       )
