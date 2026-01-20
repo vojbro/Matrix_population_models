@@ -1,0 +1,10 @@
+name: matrix_model
+title:
+username: vobro
+account: vobro
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16463080
+bundleId: 11470796
+url: https://vobro.shinyapps.io/matrix_model/
+version: 1
