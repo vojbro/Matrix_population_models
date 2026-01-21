@@ -1,6 +1,7 @@
 library(shiny)
 library(shinyMatrix)
 library(expm)
+library(DT)
 
 # Simulation of the popualtion growth
 matrix_model <- function(mat,init,generations) {
@@ -41,7 +42,7 @@ ui <- fluidPage(
         h5("Rychlost růstu populace (vlastní číslo):"),
         uiOutput("lambda"),
         h5("Dominantní vlastní vektor matice"),
-        uiOutput("eigvek")
+        tableOutput("eigvek")
       )
     ),
     hr(),
@@ -64,7 +65,7 @@ ui <- fluidPage(
         matrixInput("pop_matrix", value = matrix(c(0,0.8,1.3,0),nrow=2), rows=list(names=F),cols=list(names=F),class="numeric"),
       ),
       column(3,
-        h5("Počáteční velikost populace (pro jednotlivé kohorty)"),
+        h5("Počáteční velikost populace"),
         matrixInput("init_vector", value = matrix(rep(50,2),ncol=1), rows=list(names=F),cols=list(names=F),class="numeric")
       )
     )
@@ -99,10 +100,14 @@ server <- function(input, output, session) {
       lambd <- sort(eigen(input$pop_matrix)$values,decreasing=T)[1]
       paste("λ = ",lambd,sep="")
       })
-    output$eigvek <- renderUI({
+    output$eigvek <- renderTable({
+      if (input$n_cohorts == 1) {
+        return(matrix(NA,1,1))
+      }
       vecs <- round(eigen(input$pop_matrix)$vectors[,order(eigen(input$pop_matrix)$values,decreasing = T)],3)
-      paste("(",vecs[1,1],"; ",vecs[2,1],")",sep="")
-    })
+      t(vecs[,1])
+    },
+    colnames=FALSE)
     
 }
 
