@@ -105,10 +105,9 @@ server <- function(input, output, session) {
         return(matrix(NA,1,1))
       }
       vecs <- round(eigen(input$pop_matrix)$vectors[,order(eigen(input$pop_matrix)$values,decreasing = T)],3)
-      t(vecs[,1])
+      matrix(as.character(t(vecs[,1])),nrow=1)
     },
     colnames=FALSE)
-    
 }
 
 # Run the application 
