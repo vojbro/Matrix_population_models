@@ -4,18 +4,40 @@ library(expm)
 library(DT)
 
 # Simulation of the popualtion growth
-matrix_model <- function(mat,init,generations) {
+matrix_model <- function(mat,init,generations, logistic, capacity, b) {
   pop <- matrix(init,nrow=1)
   for (gen in generations) {
-    pop_t  <- (mat %^% gen) %*% init
-    pop <- rbind(pop, t(pop_t))
+    if (logistic) {
+      pop_t <- generate_matrix_logistic_model(mat,pop[nrow(pop),],capacity, b)
+      print(mat[nrow(mat),])
+      pop <- rbind(pop, t(pop_t))
+    } else {
+      pop_t  <- (mat %^% gen) %*% init
+      pop <- rbind(pop, t(pop_t))
+    }
   }
   return(structure(list(pop_size = pop, time = c(0,generations)),class="mod_results"))
+}
+
+generate_matrix_logistic_model <- function(mat,vec,capacity, b) {
+  mat_new <- mat
+  for (r in 1:nrow(mat)) {
+    for (c in 1:ncol(mat)) {
+      if ((c+1) == r | c==r) {
+        mat_new[r,c] <- mat[r,c] * exp(-exp(b)*sum(vec)/capacity)
+      } else {
+        mat_new[r,c] <- mat[r,c]
+      }
+    }
+  }
+  print(mat_new)
+  vec_new <- mat_new%*%vec
+  return(vec_new)
 }
 # mmm <- matrix(c(0,0.8,1.3,0),nrow=2)
 # init <- c(50,50)
 # rrr <- matrix_model(mmm,init,1:100)
-plot.mod_results <- function(mod, display_cohorts = FALSE) {
+plot.mod_results <- function(mod, display_cohorts = FALSE, logistic, capacity) {
   sums <- rowSums(mod$pop_size)
   plot(sums~mod$time,type="l",ylim=c(0,max(sums)),xlab="generace",ylab="velikost populace",lwd=2)
   if (display_cohorts) {
@@ -24,6 +46,9 @@ plot.mod_results <- function(mod, display_cohorts = FALSE) {
       lines(mod$time,mod$pop_size[,i],lty=i+1)
     }
     legend("topleft",legend = paste("kohorta",1:n_coh),lty=2:(n_coh+1))
+  }
+  if (logistic) {
+    abline(h=capacity, lty=2, lwd=2, col="red")
   }
 }
 # plot(rrr, TRUE)
@@ -57,7 +82,14 @@ ui <- fluidPage(
              max = 250,
              value = 100
           ),
-        checkboxInput("display_cohorts","Zobrazit věkové kohorty v grafu")
+        checkboxInput("display_cohorts","Zobrazit věkové kohorty v grafu"),
+        checkboxInput("logistic","Zahrnout nosnou kapacitu do modelu"),
+        conditionalPanel(
+          condition = "input.logistic", numericInput("carrying_capacity","Nosná kapacita",min=1,value=1000),
+          ),
+        conditionalPanel(
+          condition = "input.logistic", sliderInput("b","Míra negativní hstotní závislosti.",min=-7, max =1,value=-4),
+        )
        ),
       column(
         6,
@@ -94,7 +126,7 @@ server <- function(input, output, session) {
     })
     output$pop_growth <- renderPlot({
         # generate bins based on input$bins from ui.R
-      plot(matrix_model(input$pop_matrix,input$init_vector,1:input$generations),input$display_cohorts)
+      plot(matrix_model(input$pop_matrix,input$init_vector,1:input$generations, input$logistic, input$carrying_capacity, input$b),input$display_cohorts, input$logistic, input$carrying_capacity)
     })
     output$lambda <- renderUI({
       lambd <- sort(eigen(input$pop_matrix)$values,decreasing=T)[1]
