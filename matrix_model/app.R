@@ -9,7 +9,6 @@ matrix_model <- function(mat,init,generations, logistic, capacity, b) {
   for (gen in generations) {
     if (logistic) {
       pop_t <- generate_matrix_logistic_model(mat,pop[nrow(pop),],capacity, b)
-      print(mat[nrow(mat),])
       pop <- rbind(pop, t(pop_t))
     } else {
       pop_t  <- (mat %^% gen) %*% init
@@ -129,14 +128,17 @@ server <- function(input, output, session) {
       plot(matrix_model(input$pop_matrix,input$init_vector,1:input$generations, input$logistic, input$carrying_capacity, input$b),input$display_cohorts, input$logistic, input$carrying_capacity)
     })
     output$lambda <- renderUI({
-      lambd <- sort(eigen(input$pop_matrix)$values,decreasing=T)[1]
+      ev <- eigen(input$pop_matrix)$values
+      lambd <- sort(ev[!is.complex(ev)],decreasing=T)[1]
       paste("λ = ",lambd,sep="")
       })
     output$eigvek <- renderTable({
+      ev <- eigen(input$pop_matrix)$values
       if (input$n_cohorts == 1) {
         return(matrix(NA,1,1))
       }
-      vecs <- round(eigen(input$pop_matrix)$vectors[,order(eigen(input$pop_matrix)$values,decreasing = T)],3)
+      vecs <- round(eigen(input$pop_matrix)$vectors[,order(Mod(ev),decreasing = T)],3)
+      vecs <- vecs[,!is.complex(ev)]
       matrix(as.character(t(vecs[,1])),nrow=1)
     },
     colnames=FALSE)
